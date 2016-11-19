@@ -1,0 +1,7 @@
+a.out
+image.png
+kohonen_learn
+*.o
+neuron_weights.txt
+plot_neurons.pyc
+test_binary
