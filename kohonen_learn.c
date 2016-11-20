@@ -10,12 +10,12 @@
 /**
  * Initialize neuron weight vectors to random values
  */
-void kohonen_init_weights(float_type **weight_vectors,
+void kohonen_init_weights(double **weight_vectors,
                      int data_dim,
                      int num_neurons) {
     for (int i = 0; i < num_neurons; ++i) {
         for (int j = 0; j < data_dim; ++j) {
-            weight_vectors[i][j] = (float_type) rand_in_range(0, 255);
+            weight_vectors[i][j] = (double) rand_in_range(0, 255);
         }
     }
 }
@@ -26,23 +26,23 @@ void kohonen_init_weights(float_type **weight_vectors,
  * a double** matrix that represents neuron weights. This matrix gets
  * changed on every iteration.
  */
-void kohonen_learn_iter(float_type **input_vectors,
+void kohonen_learn_iter(double **input_vectors,
                    int input_size,
                    int data_dim,
-                   float_type **weight_vectors,
+                   double **weight_vectors,
                    int num_neurons,
                    int neurons_x,
                    int neurons_y,
-                   float_type epoch,
-                   float_type initial_learning_rate,
-                   float_type learning_rate_lambda,
-                   float_type initial_radius,
-                   float_type radius_lambda) {
+                   double epoch,
+                   double initial_learning_rate,
+                   double learning_rate_lambda,
+                   double initial_radius,
+                   double radius_lambda) {
     // printf("Epoch %f\n", epoch); fflush(stdout);
-    float_type *input_vector;
-    float_type min_distance = -1.0, distance = 0.0;
-    float_type radius = 0.0, learning_rate = 0.0;
-    float_type lattice_dists[num_neurons];
+    double *input_vector;
+    double min_distance = -1.0, distance = 0.0;
+    double radius = 0.0, learning_rate = 0.0;
+    double lattice_dists[num_neurons];
 
     int bmu_number = 0, bmu_x = 0, bmu_y = 0;
     int vector_number = (int) rand_in_range(0, input_size - 1);
@@ -88,7 +88,7 @@ void kohonen_learn_iter(float_type **input_vectors,
             if (neuron_number == bmu_number) {
                 lattice_dists[neuron_number] = 0.0;
             } else {
-                lattice_dists[neuron_number] = (float_type) sqrt(
+                lattice_dists[neuron_number] = (double) sqrt(
                         (x - bmu_x) * (x - bmu_x) +
                         (y - bmu_y) * (y - bmu_y));
             }
@@ -97,19 +97,19 @@ void kohonen_learn_iter(float_type **input_vectors,
 
     // 5. Re-calculate weight vectors
     for (int i = 0; i < num_neurons; ++i) {
-        float_type d = lattice_dists[i];
+        double d = lattice_dists[i];
 
         if (d > radius) {
             continue;
         }
 
         for (int dim = 0; dim < data_dim; ++dim) {
-            float_type w = weight_vectors[i][dim];
-            float_type x = input_vector[dim];
+            double w = weight_vectors[i][dim];
+            double x = input_vector[dim];
 
             // printf("%d distance: %f\n", i, d); fflush(stdout);
 
-            // float_type modifier = exp(-d / (2.0 * pow(radius, 2))) * learning_rate * (x - w);
+            // double modifier = exp(-d / (2.0 * pow(radius, 2))) * learning_rate * (x - w);
 
             // printf("%d term: %f\n", i, modifier); fflush(stdout);
 
@@ -149,6 +149,7 @@ void print_help(char *command_name) {
  *   -r0 -- Initial radius
  *   -rl -- Radius lambda parameter
  *   -s -- PRNG seed (optional)
+ *   ./kohonen_learn -i test_input_data.txt -x 40 -y 40 -m 3 -e 1000 -a0 0.1 -al 100.0 -r0 40.0 -rl 100.0 -o neuron_weights.txt works nice
  */
 int main(int argc, char **argv) {
     if (argc <= 1) {
@@ -159,12 +160,12 @@ int main(int argc, char **argv) {
     int success = 0;
 
     int num_vectors = 0;
-    float_type **input_vectors;
-    float_type **neuron_weights;
+    double **input_vectors;
+    double **neuron_weights;
 
     int neurons_x = -1, neurons_y = -1, data_dim = -1, seed = -1, num_neurons = 0;
 
-    float_type max_epochs = -1.0, initial_learning_rate = -1.0, learning_rate_lambda = -1.0, initial_radius = -1.0, radius_lambda = -1.0;
+    double max_epochs = -1.0, initial_learning_rate = -1.0, learning_rate_lambda = -1.0, initial_radius = -1.0, radius_lambda = -1.0;
 
     char *input_path = "FOOBAR", *output_path = "FOOBAR";
 
@@ -210,7 +211,7 @@ int main(int argc, char **argv) {
     allocate_matrix(&neuron_weights, num_neurons, data_dim);
     kohonen_init_weights(neuron_weights, data_dim, num_neurons);
 
-    for (float_type epoch = 0; epoch < max_epochs; epoch += 1.0) {
+    for (double epoch = 0; epoch < max_epochs; epoch += 1.0) {
         kohonen_learn_iter(input_vectors,
                            num_vectors,
                            data_dim,

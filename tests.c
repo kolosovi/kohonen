@@ -6,8 +6,8 @@
 int ROWS = 1000, COLS = 2000;
 
 
-float_type ** test_allocate_matrix() {
-    float_type **vectors;
+double ** test_allocate_matrix() {
+    double **vectors;
 
     allocate_matrix(&vectors, ROWS, COLS);
 
@@ -21,15 +21,15 @@ float_type ** test_allocate_matrix() {
 }
 
 
-void test_free_matrix(float_type **vectors, int num_vectors, int dims) {
+void test_free_matrix(double **vectors, int num_vectors, int dims) {
     free_matrix(vectors, num_vectors, dims);
 }
 
 
 void test_read_input_data(char *filename) {
     int num_vectors = 0, dims = 0;
-    float_type **vectors;
-    float_type *vector;
+    double **vectors;
+    double *vector;
 
     read_input_data(filename, &vectors, &num_vectors, &dims);
 
@@ -46,12 +46,12 @@ void test_read_input_data(char *filename) {
 
 void test_rand_in_range() {
     for (int i = 0; i < 10; ++i) {
-        printf("%f ", (float_type) rand_in_range(0, 255));
+        printf("%f ", (double) rand_in_range(0, 255));
     }
 }
 
 int main(int argc, char **argv) {
-    float_type **matrix;
+    double **matrix;
 
     matrix = test_allocate_matrix();
 

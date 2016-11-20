@@ -38,13 +38,13 @@ int parse_int(char *str, int *target_int) {
 }
 
 
-int parse_float(char *str, float_type *target_float) {
+int parse_float(char *str, double *target_float) {
     char *str_end;
 
     double dummy = strtod(str, &str_end);
 
     if (str != str_end) {
-        *target_float = (float_type) dummy;
+        *target_float = (double) dummy;
         return 0;
     }
 
@@ -87,11 +87,11 @@ int parse_args(int argc,
                 int *neurons_x,
                 int *neurons_y,
                 int *data_dim,
-                float_type *max_epochs,
-                float_type *initial_learning_rate,
-                float_type *learning_rate_lambda,
-                float_type *initial_radius,
-                float_type *radius_lambda,
+                double *max_epochs,
+                double *initial_learning_rate,
+                double *learning_rate_lambda,
+                double *initial_radius,
+                double *radius_lambda,
                 char **input_path,
                 char **output_path,
                 int *seed) {
@@ -196,18 +196,18 @@ int parse_args(int argc,
 }
 
 
-void allocate_matrix(float_type ***vectors, int num_vectors, int dims) {
+void allocate_matrix(double ***vectors, int num_vectors, int dims) {
     // Allocate memory for the pointers to vectors
-    *vectors = (float_type **) calloc(num_vectors, sizeof(float_type *));
+    *vectors = (double **) calloc(num_vectors, sizeof(double *));
 
     // Allocate memory for vectors
     for (int i = 0; i < num_vectors; ++i) {
-        (*vectors)[i] = (float_type *) calloc(dims, sizeof(float_type));
+        (*vectors)[i] = (double *) calloc(dims, sizeof(double));
     }
 }
 
 
-void free_matrix(float_type **vectors, int num_vectors, int dims) {
+void free_matrix(double **vectors, int num_vectors, int dims) {
     // Free memory allocated for each vector
     for (int i = 0; i < num_vectors; ++i) {
         free(vectors[i]);
@@ -221,7 +221,7 @@ void free_matrix(float_type **vectors, int num_vectors, int dims) {
 /**
  * Return success indicator
  */
-int parse_vector(char *line, float_type *vector, int dims) {
+int parse_vector(char *line, double *vector, int dims) {
     char *remaining = line;
     double dummy;
 
@@ -248,7 +248,7 @@ int parse_vector(char *line, float_type *vector, int dims) {
 }
 
 
-int read_input_data(char *input_path, float_type ***input_vectors, int *num_vectors, int *dims) {
+int read_input_data(char *input_path, double ***input_vectors, int *num_vectors, int *dims) {
     int success = 0;
 
     FILE *input_file = fopen(input_path, "r");
@@ -297,7 +297,7 @@ int read_input_data(char *input_path, float_type ***input_vectors, int *num_vect
 }
 
 
-void write_output_data(char *output_path, float_type **output_vectors, int num_vectors, int dims) {
+void write_output_data(char *output_path, double **output_vectors, int num_vectors, int dims) {
     FILE *output_file = fopen(output_path, "w");
 
     if (dims > 0) {
@@ -343,8 +343,8 @@ long rand_in_range(long lower, long upper) {
 }
 
 
-float_type euclidean_distance(float_type *v1, float_type *v2, int dims) {
-    float_type sum = 0.0;
+double euclidean_distance(double *v1, double *v2, int dims) {
+    double sum = 0.0;
 
     for (int i = 0; i < dims; ++i) {
         sum += (v1[i] - v2[i]) * (v1[i] - v2[i]);
