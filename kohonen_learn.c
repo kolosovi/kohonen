@@ -10,12 +10,12 @@
 /**
  * Initialize neuron weight vectors to random values
  */
-void kohonen_init_weights(double **weight_vectors,
+void kohonen_init_weights(double *weight_vectors,
                      int data_dim,
                      int num_neurons) {
     for (int i = 0; i < num_neurons; ++i) {
         for (int j = 0; j < data_dim; ++j) {
-            weight_vectors[i][j] = (double) rand_in_range(0, 255);
+            set_cell(weight_vectors, data_dim, i, j, (double) rand_in_range(0, 255));
         }
     }
 }
@@ -26,10 +26,10 @@ void kohonen_init_weights(double **weight_vectors,
  * a double** matrix that represents neuron weights. This matrix gets
  * changed on every iteration.
  */
-void kohonen_learn_iter(double **input_vectors,
+void kohonen_learn_iter(double *input_vectors,
                    int input_size,
                    int data_dim,
-                   double **weight_vectors,
+                   double *weight_vectors,
                    int num_neurons,
                    int neurons_x,
                    int neurons_y,
@@ -50,17 +50,18 @@ void kohonen_learn_iter(double **input_vectors,
     // printf("Vector index %d\n", vector_number); fflush(stdout);
 
     // 1. Pick random input vector
-    input_vector = input_vectors[vector_number];
+    input_vector = get_vec(input_vectors, data_dim, vector_number);
 
     // 2. Calculate distances from neuron weight vectors to the input vector
     // and find the neuron with minimum distance (the best-matching unit, BMU)
     for (int x = 0; x < neurons_x; ++x) {
         for (int y = 0; y < neurons_y; ++y) {
             int neuron_number = (x * neurons_y) + y;
+            double *weight_vector = get_vec(weight_vectors, data_dim, neuron_number);
 
             distance = euclidean_distance(
                 input_vector,
-                weight_vectors[neuron_number],
+                weight_vector,
                 data_dim);
 
             if (min_distance < 0.0 || distance < min_distance) {
@@ -104,7 +105,7 @@ void kohonen_learn_iter(double **input_vectors,
         }
 
         for (int dim = 0; dim < data_dim; ++dim) {
-            double w = weight_vectors[i][dim];
+            double w = get_cell(weight_vectors, data_dim, i, dim);
             double x = input_vector[dim];
 
             // printf("%d distance: %f\n", i, d); fflush(stdout);
@@ -115,7 +116,7 @@ void kohonen_learn_iter(double **input_vectors,
 
             w = w + exp(-d / (2.0 * pow(radius, 2))) * learning_rate * (x - w);
 
-            weight_vectors[i][dim] = w;
+            set_cell(weight_vectors, data_dim, i, dim, w);
         }
     }
 }
@@ -160,8 +161,8 @@ int main(int argc, char **argv) {
     int success = 0;
 
     int num_vectors = 0;
-    double **input_vectors;
-    double **neuron_weights;
+    double *input_vectors;
+    double *neuron_weights;
 
     int neurons_x = -1, neurons_y = -1, data_dim = -1, seed = -1, num_neurons = 0;
 

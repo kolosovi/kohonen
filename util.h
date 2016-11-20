@@ -9,10 +9,19 @@ int parse_args(int argc, char **argv, int *neurons_x, int *neurons_y,
                int *seed);
 
 
-void allocate_matrix(double ***vectors, int num_vectors, int dims);
+void allocate_matrix(double **vectors, int num_vectors, int dims);
 
 
-void free_matrix(double **vectors, int num_vectors, int dims);
+void free_matrix(double *vectors, int num_vectors, int dims);
+
+
+double get_cell(double *vectors, int dims, int row, int col);
+
+
+void set_cell(double *vectors, int dims, int row, int col, double val);
+
+
+double *get_vec(double *vectors, int dims, int row);
 
 
 /**
@@ -20,10 +29,10 @@ void free_matrix(double **vectors, int num_vectors, int dims);
  * second line is the dimensionality,
  * all the following lines are comma-separated vector values
  */
-int read_input_data(char *input_path, double ***input_vectors, int *num_vectors, int *dims);
+int read_input_data(char *input_path, double **input_vectors, int *num_vectors, int *dims);
 
 
-void write_output_data(char *output_path, double **output_vectors, int num_vectors, int dims);
+void write_output_data(char *output_path, double *output_vectors, int num_vectors, int dims);
 
 
 /**

@@ -196,25 +196,28 @@ int parse_args(int argc,
 }
 
 
-void allocate_matrix(double ***vectors, int num_vectors, int dims) {
-    // Allocate memory for the pointers to vectors
-    *vectors = (double **) calloc(num_vectors, sizeof(double *));
-
-    // Allocate memory for vectors
-    for (int i = 0; i < num_vectors; ++i) {
-        (*vectors)[i] = (double *) calloc(dims, sizeof(double));
-    }
+void allocate_matrix(double **vectors, int num_vectors, int dims) {
+    *vectors = (double *) calloc(num_vectors * dims, sizeof(double));
 }
 
 
-void free_matrix(double **vectors, int num_vectors, int dims) {
-    // Free memory allocated for each vector
-    for (int i = 0; i < num_vectors; ++i) {
-        free(vectors[i]);
-    }
-
-    // Free memory allocated for the array of vectors
+void free_matrix(double *vectors, int num_vectors, int dims) {
     free(vectors);
+}
+
+
+double get_cell(double *vectors, int dims, int row, int col) {
+    return vectors[row * dims + col];
+}
+
+
+void set_cell(double *vectors, int dims, int row, int col, double val) {
+    vectors[row * dims + col] = val;
+}
+
+
+double *get_vec(double *vectors, int dims, int row) {
+    return vectors + row * dims;
 }
 
 
@@ -248,7 +251,7 @@ int parse_vector(char *line, double *vector, int dims) {
 }
 
 
-int read_input_data(char *input_path, double ***input_vectors, int *num_vectors, int *dims) {
+int read_input_data(char *input_path, double **input_vectors, int *num_vectors, int *dims) {
     int success = 0;
 
     FILE *input_file = fopen(input_path, "r");
@@ -281,7 +284,7 @@ int read_input_data(char *input_path, double ***input_vectors, int *num_vectors,
             vector_index = line_number - 2;
 
             // Read vector
-            success = parse_vector(line, (*input_vectors)[vector_index], *dims);
+            success = parse_vector(line, get_vec(*input_vectors, *dims, vector_index), *dims);
 
             if (success != 0) {
                 free_matrix(*input_vectors, *num_vectors, *dims);
@@ -297,17 +300,17 @@ int read_input_data(char *input_path, double ***input_vectors, int *num_vectors,
 }
 
 
-void write_output_data(char *output_path, double **output_vectors, int num_vectors, int dims) {
+void write_output_data(char *output_path, double *output_vectors, int num_vectors, int dims) {
     FILE *output_file = fopen(output_path, "w");
 
     if (dims > 0) {
         fprintf(output_file, "%d\n", num_vectors);
         fprintf(output_file, "%d\n", dims);
         for (int vector_num = 0; vector_num < num_vectors; ++vector_num) {
-            fprintf(output_file, "%f", output_vectors[vector_num][0]);
+            fprintf(output_file, "%f", get_cell(output_vectors, dims, vector_num, 0));
 
             for (int dim = 1; dim < dims; ++dim) {
-                fprintf(output_file, ",%f", output_vectors[vector_num][dim]);
+                fprintf(output_file, ",%f", get_cell(output_vectors, dims, vector_num, dim));
             }
 
             fprintf(output_file, "\n");
