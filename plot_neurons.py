@@ -10,7 +10,7 @@ def clip(v):
 def get_weights(input_path, neurons_x, neurons_y):
     weight_list = []
 
-    n_weights = np.zeros((40, 40, 3), dtype=np.uint8)
+    n_weights = np.zeros((neurons_x, neurons_y, 3), dtype=np.uint8)
 
     with open(input_path, "r") as nfile:
         for i, line in enumerate(nfile):
@@ -58,4 +58,4 @@ if __name__ == "__main__":
                        )
     args = parser.parse_args()
 
-    plot_weights(args.input, args.neurons_x, args.neurons_y)
+    plot_weights(args.input, args.neurons_y, args.neurons_x)
