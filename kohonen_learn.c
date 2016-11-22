@@ -102,7 +102,7 @@ int kohonen_learn_iter(double *input_vectors,
 
     // Mpi gather distances and local BMU numbers and THEN find the minimum.
     mpi_success = MPI_Gather(
-        (const void *) (bmu_dists + rank),
+        (void *) (bmu_dists + rank),
         1,
         MPI_DOUBLE,
         (void *) bmu_dists,
@@ -116,7 +116,7 @@ int kohonen_learn_iter(double *input_vectors,
     }
 
     mpi_success = MPI_Gather(
-        (const void *) (bmu_numbers + rank),
+        (void *) (bmu_numbers + rank),
         1,
         MPI_INT,
         (void *) bmu_numbers,
@@ -312,7 +312,7 @@ int main(int argc, char **argv) {
 
     // Gather neuron range lengths so we can gather neuron weights later
     success =  MPI_Gather(
-                    (const void *) (neuron_range_lengths + rank),
+                    (void *) (neuron_range_lengths + rank),
                     1, MPI_INT,
                     neuron_range_lengths,
                     1, MPI_INT,
@@ -326,7 +326,7 @@ int main(int argc, char **argv) {
 
     // Gather neuron displacements so we can gather neuron weights later
     success =  MPI_Gather(
-                    (const void *) (neuron_displacements + rank),
+                    (void *) (neuron_displacements + rank),
                     1, MPI_INT,
                     neuron_displacements,
                     1, MPI_INT,
@@ -374,7 +374,7 @@ int main(int argc, char **argv) {
     // This requires us to first gather data range lengths, then use gatherv to gather neuron weights
     // Then the main process writes neuron weights to output path
     success = MPI_Gatherv(
-        (const void *)(neuron_weights + (neuron_num_start * data_dim)),
+        (void *)(neuron_weights + (neuron_num_start * data_dim)),
         neuron_range_lengths[rank],
         MPI_DOUBLE,
         (void *)neuron_weights,
