@@ -29,6 +29,7 @@ do
 
     while [ $epochs -le $epochs_max ]
     do
+        used_slots=$(squeue | grep 'zackw' | wc -l)
 
         # Stop until there are slots for another job
         while [ $used_slots -ge $max_slots ]
