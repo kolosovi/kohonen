@@ -36,7 +36,7 @@ do
             used_slots=$(squeue | grep 'zackw' | wc -l)
         done
 
-        echo sbatch -n $num_procs -o stdout_${epochs}_epochs_${num_procs}_processes.txt -p $queue ompi kohonen_learn -i test_data/experiment_data.txt -x 40 -y 40 -m 3 -e $epochs -a0 0.1 -al $learning_rate_lambda -r0 40.0 -rl $radius_lambda -o neuron_weights_${epochs}_epochs_${num_procs}_processes.txt
+        sbatch -n $num_procs -o stdout_${epochs}_epochs_${num_procs}_processes.txt -p $queue ompi -n $num_procs kohonen_learn -i test_data/experiment_data.txt -x 40 -y 40 -m 3 -e $epochs -a0 0.1 -al $learning_rate_lambda -r0 40.0 -rl $radius_lambda -o neuron_weights_${epochs}_epochs_${num_procs}_processes.txt
 
         epochs=$[$epochs+$epochs_step]
         learning_rate_lambda=$[$learning_rate_lambda+$learning_rate_lambda_step]
