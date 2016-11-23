@@ -181,6 +181,10 @@ int parse_args(int argc,
 
                     break;
                 }
+            default:
+                {
+                    success = 1;    // This should never run.
+                }
         }
 
         if (success != 0) {
