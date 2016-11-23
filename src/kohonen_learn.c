@@ -10,8 +10,9 @@
 
 
 static int num_tasks, rank;
-static int neuron_num_start = 0;  // Included in the rang
-static int neuron_num_end = 0;    // Not included in the range
+static int neuron_num_start = 0;       // Included in the range
+static int neuron_num_end = 0;         // Not included in the range
+static int process_num_neurons = 0;    // # of neurons given to this process
 
 static double start_time = 0.0, end_time = 0.0;
 
@@ -61,13 +62,14 @@ int kohonen_learn_iter(double *input_vectors,
     double bmu_dists[num_tasks];
     double min_distance = -1.0;
     double radius = 0.0, learning_rate = 0.0;
-    double lattice_dists[num_neurons];
+    double lattice_dists[process_num_neurons];
 
     bmu_dists[rank] = -1.0;
 
     int bmu_numbers[num_tasks];
 
     int bmu_number = 0, bmu_x = 0, bmu_y = 0, vector_number = 0;
+    int global_neuron_number = 0;
     int neuron_x = 0, neuron_y = 0;
     int mpi_success = 0;
     int min_distance_rank = 0;
@@ -88,7 +90,7 @@ int kohonen_learn_iter(double *input_vectors,
 
     // 2. Calculate distances from neuron weight vectors to the input vector
     // and find the neuron with minimum distance (the best-matching unit, BMU)
-    for (int neuron_number = neuron_num_start; neuron_number < neuron_num_end; ++neuron_number) {
+    for (int neuron_number = 0; neuron_number < process_num_neurons; ++neuron_number) {
         double *weight_vector = get_vec(weight_vectors, data_dim, neuron_number);
 
         double distance = euclidean_distance(
@@ -98,7 +100,7 @@ int kohonen_learn_iter(double *input_vectors,
 
         if (bmu_dists[rank] < 0.0 || distance < bmu_dists[rank]) {
             bmu_dists[rank] = distance;
-            bmu_numbers[rank] = neuron_number;
+            bmu_numbers[rank] = neuron_num_start + neuron_number;
         }
     }
 
@@ -162,10 +164,12 @@ int kohonen_learn_iter(double *input_vectors,
     // 4. Calculate distances from BMU to other neurons on the lattice
     // neuron_x = neuron_num_start / neurons_y;
     // neuron_y = neuron_num_start % neurons_y;
-    for (int neuron_number = neuron_num_start; neuron_number < neuron_num_end; ++neuron_number) {
-        neuron_x = neuron_number / neurons_y;
-        neuron_y = neuron_number % neurons_y;
-        if (neuron_number == bmu_number) {
+    for (int neuron_number = 0; neuron_number < process_num_neurons; ++neuron_number) {
+        global_neuron_number = neuron_num_start + neuron_number;
+        neuron_x = global_neuron_number / neurons_y;
+        neuron_y = global_neuron_number % neurons_y;
+
+        if (global_neuron_number == bmu_number) {
             lattice_dists[neuron_number] = 0.0;
         } else {
             lattice_dists[neuron_number] = (double) sqrt(
@@ -180,7 +184,7 @@ int kohonen_learn_iter(double *input_vectors,
     }
 
     // 5. Re-calculate weight vectors
-    for (int neuron_number = neuron_num_start; neuron_number < neuron_num_end; ++neuron_number) {
+    for (int neuron_number = 0; neuron_number < process_num_neurons; ++neuron_number) {
         double d = lattice_dists[neuron_number];
 
         if (d > radius) {
@@ -258,7 +262,8 @@ int main(int argc, char **argv) {
 
     int num_vectors = 0;
     double *input_vectors;
-    double *neuron_weights;
+    double *local_neuron_weights;
+    double *neuron_weights = NULL;  // Used only in main process
 
     int neurons_x = -1, neurons_y = -1, data_dim = -1, seed = -1, num_neurons = 0;
 
@@ -279,11 +284,7 @@ int main(int argc, char **argv) {
                 &output_path,
                 &seed);
 
-    if (seed != -1) {
-        srandom(seed);
-    } else {
-        srandom(time(NULL));
-    }
+    srandom(rank * time(NULL));
 
     num_neurons = neurons_x * neurons_y;
 
@@ -319,7 +320,8 @@ int main(int argc, char **argv) {
 
     neuron_displacements[rank] = neuron_num_start * data_dim;
 
-    neuron_range_lengths[rank] = (neuron_num_end - neuron_num_start) * data_dim;
+    process_num_neurons = (neuron_num_end - neuron_num_start);
+    neuron_range_lengths[rank] = process_num_neurons * data_dim;
 
     // Gather neuron range lengths so we can gather neuron weights later
     success =  MPI_Gather(
@@ -352,20 +354,16 @@ int main(int argc, char **argv) {
     // Initialize neuron weights. We broadcast them to all processes, but
     // this should not be necessary because each process operates on its
     // own range of neurons anyway
-    allocate_matrix(&neuron_weights, num_neurons, data_dim);
+    allocate_matrix(&local_neuron_weights, process_num_neurons, data_dim);
 
-    if (rank == MAIN_PROCESS) {
-        kohonen_init_weights(neuron_weights, data_dim, num_neurons);
-    }
-
-    // Broadcast neuron weights to all processes
-    success = MPI_Bcast((void *) neuron_weights, num_neurons * data_dim, MPI_DOUBLE, MAIN_PROCESS, MPI_COMM_WORLD);
+    // Let each process initialize the weights of its neurons
+    kohonen_init_weights(local_neuron_weights, data_dim, process_num_neurons);
 
     for (double epoch = 0; epoch < max_epochs; epoch += 1.0) {
         success = kohonen_learn_iter(input_vectors,
                                      num_vectors,
                                      data_dim,
-                                     neuron_weights,
+                                     local_neuron_weights,
                                      num_neurons,
                                      neurons_x,
                                      neurons_y,
@@ -384,8 +382,11 @@ int main(int argc, char **argv) {
     // Gather neuron weights from all processes to the main process. This is pretty tough......
     // This requires us to first gather data range lengths, then use gatherv to gather neuron weights
     // Then the main process writes neuron weights to output path
+    if (rank == MAIN_PROCESS) {
+        allocate_matrix(&neuron_weights, num_neurons, data_dim);
+    }
     success = MPI_Gatherv(
-        (void *)(neuron_weights + (neuron_num_start * data_dim)),
+        (void *)(local_neuron_weights),
         neuron_range_lengths[rank],
         MPI_DOUBLE,
         (void *)neuron_weights,
