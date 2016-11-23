@@ -17,6 +17,9 @@ used_slots=0
 max_slots=3
 
 
+QUEUE_CHECK_INTERVAL=10
+
+
 while [ $num_procs -le $num_procs_max ]
 do
 
@@ -27,16 +30,14 @@ do
     while [ $epochs -le $epochs_max ]
     do
 
-        used_slots=$(squeue | grep 'zackw' | wc -l)
-
         # Stop until there are slots for another job
         while [ $used_slots -ge $max_slots ]
         do
-            sleep 1
+            sleep $QUEUE_CHECK_INTERVAL
             used_slots=$(squeue | grep 'zackw' | wc -l)
         done
 
-        sbatch -n $num_procs -o stdout_${epochs}_epochs_${num_procs}_processes.txt -p $queue ompi -n $num_procs kohonen_learn -i test_data/experiment_data.txt -x 40 -y 40 -m 3 -e $epochs -a0 0.1 -al $learning_rate_lambda -r0 40.0 -rl $radius_lambda -o neuron_weights_${epochs}_epochs_${num_procs}_processes.txt
+        echo sbatch -n $num_procs -o stdout_${epochs}_epochs_${num_procs}_processes.txt -p $queue ompi kohonen_learn -i test_data/experiment_data.txt -x 40 -y 40 -m 3 -e $epochs -a0 0.1 -al $learning_rate_lambda -r0 40.0 -rl $radius_lambda -o neuron_weights_${epochs}_epochs_${num_procs}_processes.txt
 
         epochs=$[$epochs+$epochs_step]
         learning_rate_lambda=$[$learning_rate_lambda+$learning_rate_lambda_step]
