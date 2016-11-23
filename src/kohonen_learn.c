@@ -242,6 +242,8 @@ int main(int argc, char **argv) {
 
     success = MPI_Barrier(MPI_COMM_WORLD);
 
+    printf("Rank: %d\n", rank);
+
     if (success != 0) {
         MPI_Finalize();
         return 1;
