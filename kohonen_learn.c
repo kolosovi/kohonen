@@ -13,6 +13,8 @@ static int num_tasks, rank;
 static int neuron_num_start = 0;  // Included in the rang
 static int neuron_num_end = 0;    // Not included in the range
 
+static double start_time = 0.0, end_time = 0.0;
+
 enum ProcessType {
     MAIN_PROCESS
 };
@@ -232,6 +234,17 @@ void print_help(char *command_name) {
 int main(int argc, char **argv) {
     MPI_Init(&argc, &argv);
 
+    int success = 0;
+
+    success = MPI_Barrier(MPI_COMM_WORLD);
+
+    if (success != 0) {
+        MPI_Finalize();
+        return 1;
+    }
+
+    start_time = MPI_Wtime();
+
     MPI_Comm_size(MPI_COMM_WORLD, &num_tasks);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
@@ -242,8 +255,6 @@ int main(int argc, char **argv) {
         MPI_Finalize();
         return 1;
     }
-
-    int success = 0;
 
     int num_vectors = 0;
     double *input_vectors;
@@ -391,6 +402,19 @@ int main(int argc, char **argv) {
 
     if (rank == MAIN_PROCESS) {
         write_output_data(output_path, neuron_weights, num_neurons, data_dim);
+    }
+
+    success = MPI_Barrier(MPI_COMM_WORLD);
+
+    if (success != 0) {
+        MPI_Finalize();
+        return 1;
+    }
+
+    end_time = MPI_Wtime();
+
+    if (rank == MAIN_PROCESS) {
+        printf(" %f\n", end_time - start_time);
     }
 
     MPI_Finalize();
