@@ -17,7 +17,7 @@ used_slots=0
 max_slots=3
 
 
-QUEUE_CHECK_INTERVAL=10
+QUEUE_CHECK_INTERVAL=60
 
 
 while [ $num_procs -le $num_procs_max ]
