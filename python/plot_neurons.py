@@ -33,7 +33,6 @@ def plot_weights(input_path, neurons_x, neurons_y):
     n_weights = get_weights(input_path, neurons_x, neurons_y)
     
     plt.imsave("image.png", n_weights, vmin=0.0, vmax=255.0)
-    #plt.imshow(n_weights, vmin=0.0, vmax=255.0)
 
 
 if __name__ == "__main__":

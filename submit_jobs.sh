@@ -9,8 +9,8 @@ learning_rate_lambda_step=1000
 
 radius_lambda_step=1000
 
-num_procs=${num_procs:-4}
-num_procs_step=4
+num_procs=${num_procs:-8}
+num_procs_step=8
 num_procs_max=${num_procs_max:-256}
 
 used_slots=0
