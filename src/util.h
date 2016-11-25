@@ -1,3 +1,11 @@
+enum FlopCount {
+    EXP_FLOP = 17,
+    SQRT_FLOP = 17,
+    POW_FLOP = 35
+};
+
+extern unsigned long flop_counter;
+
 /**
  * return: 0 if success, 1 otherwise
  */

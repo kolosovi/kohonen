@@ -98,6 +98,7 @@ int kohonen_learn_iter(double *input_vectors,
             weight_vector,
             data_dim);
 
+        flop_counter += 2; // 2 comparisons
         if (bmu_dists[rank] < 0.0 || distance < bmu_dists[rank]) {
             bmu_dists[rank] = distance;
             bmu_numbers[rank] = neuron_num_start + neuron_number;
@@ -136,6 +137,7 @@ int kohonen_learn_iter(double *input_vectors,
     // Main process finds BMU number
     if (rank == MAIN_PROCESS) {
         for (int i = 0; i < num_tasks; ++i) {
+            flop_counter += 2; // 2 comparisons
             if (min_distance < 0.0 || bmu_dists[i] < min_distance) {
                 min_distance = bmu_dists[i];
                 min_distance_rank = i;
@@ -157,7 +159,10 @@ int kohonen_learn_iter(double *input_vectors,
     bmu_y = bmu_number % neurons_y;
 
     // 3. Calculate neighborhood radius and learning rate
+    // *, exp, -, /. Exp probably takes more!
+    flop_counter += (3 + EXP_FLOP);
     radius = initial_radius * exp(-(epoch / radius_lambda));
+    flop_counter += (3 + EXP_FLOP);
     learning_rate = initial_learning_rate *
                     exp(-(epoch / learning_rate_lambda));
 
@@ -172,6 +177,7 @@ int kohonen_learn_iter(double *input_vectors,
         if (global_neuron_number == bmu_number) {
             lattice_dists[neuron_number] = 0.0;
         } else {
+            flop_counter += SQRT_FLOP;
             lattice_dists[neuron_number] = (double) sqrt(
                     (neuron_x - bmu_x) * (neuron_x - bmu_x) +
                     (neuron_y - bmu_y) * (neuron_y - bmu_y));
@@ -187,6 +193,7 @@ int kohonen_learn_iter(double *input_vectors,
     for (int neuron_number = 0; neuron_number < process_num_neurons; ++neuron_number) {
         double d = lattice_dists[neuron_number];
 
+        ++flop_counter;
         if (d > radius) {
             continue;
         }
@@ -195,6 +202,7 @@ int kohonen_learn_iter(double *input_vectors,
             double w = get_cell(weight_vectors, data_dim, neuron_number, dim);
             double x = input_vector[dim];
 
+            flop_counter += (8 + POW_FLOP);
             w = w + exp(-d / (2.0 * pow(radius, 2))) * learning_rate * (x - w);
 
             set_cell(weight_vectors, data_dim, neuron_number, dim, w);
@@ -260,6 +268,7 @@ int main(int argc, char **argv) {
         return 1;
     }
 
+    unsigned long total_flop = 0;
     int num_vectors = 0;
     double *input_vectors;
     double *local_neuron_weights;
@@ -414,8 +423,21 @@ int main(int argc, char **argv) {
 
     end_time = MPI_Wtime();
 
+    // if (rank == MAIN_PROCESS) {
+    //     printf(" %f\n", end_time - start_time);
+    // }
+
+    success = MPI_Reduce(
+        (void *)(&flop_counter),
+        (void *)(&total_flop),
+        1,
+        MPI_UNSIGNED_LONG,
+        MPI_SUM,
+        MAIN_PROCESS,
+        MPI_COMM_WORLD);
+
     if (rank == MAIN_PROCESS) {
-        printf(" %f\n", end_time - start_time);
+        printf("%lu\n", total_flop);
     }
 
     MPI_Finalize();

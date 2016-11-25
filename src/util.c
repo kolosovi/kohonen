@@ -6,6 +6,9 @@
 #include "util.h"
 
 
+unsigned long flop_counter = 0;
+
+
 enum FlagType {
     NONE,
     NEURONS_X,
@@ -354,8 +357,10 @@ double euclidean_distance(double *v1, double *v2, int dims) {
     double sum = 0.0;
 
     for (int i = 0; i < dims; ++i) {
+        flop_counter += 4;
         sum += (v1[i] - v2[i]) * (v1[i] - v2[i]);
     }
 
+    ++flop_counter;
     return sqrt(sum);
 }
