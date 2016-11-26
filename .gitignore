@@ -5,3 +5,5 @@ kohonen_learn
 neuron_weights.txt
 plot_neurons.pyc
 test_binary
+*.tar.gz
+*.tar
