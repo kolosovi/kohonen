@@ -84,5 +84,5 @@
 
 и запустить скрипт:
 
-    cd ~/_scratch
+    cd ~/_scratch  # Проследите, что исполняемый файл kohonen_learn находится в этой папке
     ./submit_jobs_by_neurons.sh
