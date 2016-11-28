@@ -10,7 +10,7 @@ build_dir:
 
 
 kohonen_learn : build_dir $(BUILDDIR)/kohonen_learn.o $(BUILDDIR)/util.o
-	$(CC) $(CFLAGS) $(BUILDDIR)/kohonen_learn.o $(BUILDDIR)/util.o -o $(BUILDDIR)/kohonen_learn
+	$(CC) $(CFLAGS) $(BUILDDIR)/kohonen_learn.o $(BUILDDIR)/util.o -o kohonen_learn
 
 $(BUILDDIR)/util.o : build_dir $(SOURCEDIR)/util.c
 	$(CC) $(CFLAGS) -c $(SOURCEDIR)/util.c -o $(BUILDDIR)/util.o
