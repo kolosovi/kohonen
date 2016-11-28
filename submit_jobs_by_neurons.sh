@@ -20,7 +20,6 @@ max_slots=3
 
 QUEUE_CHECK_INTERVAL=60
 
-
 while [ $num_procs -le $num_procs_max ]
 do
 
@@ -30,13 +29,13 @@ do
 
     while [ $neurons -le $neurons_max ]
     do
-        used_slots=$(squeue | grep 'zackw' | wc -l)
+        used_slots=$(squeue -h -u `whoami` | wc -l)
 
         # Stop until there are slots for another job
         while [ $used_slots -ge $max_slots ]
         do
             sleep $QUEUE_CHECK_INTERVAL
-            used_slots=$(squeue | grep 'zackw' | wc -l)
+            used_slots=$(squeue -h -u `whoami` | wc -l)
         done
 
         sbatch -t 15 -n $num_procs -o stdout_${neurons}_neurons_${num_procs}_processes.txt -p $queue ompi -n $num_procs kohonen_learn -i test_data/experiment_data.txt -x 1 -y $neurons -m 3 -e 10000 -a0 0.1 -al $learning_rate_lambda -r0 $neurons -rl $radius_lambda -o neuron_weights_${neurons}_neurons_${num_procs}_processes.txt

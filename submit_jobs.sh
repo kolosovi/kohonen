@@ -29,13 +29,13 @@ do
 
     while [ $epochs -le $epochs_max ]
     do
-        used_slots=$(squeue | grep 'zackw' | wc -l)
+        used_slots=$(squeue -h -u `whoami` | wc -l)
 
         # Stop until there are slots for another job
         while [ $used_slots -ge $max_slots ]
         do
             sleep $QUEUE_CHECK_INTERVAL
-            used_slots=$(squeue | grep 'zackw' | wc -l)
+            used_slots=$(squeue -h -u `whoami` | wc -l)
         done
 
         sbatch -t 15 -n $num_procs -o stdout_${epochs}_epochs_${num_procs}_processes.txt -p $queue ompi -n $num_procs kohonen_learn -i test_data/experiment_data.txt -x 40 -y 40 -m 3 -e $epochs -a0 0.1 -al $learning_rate_lambda -r0 40.0 -rl $radius_lambda -o neuron_weights_${epochs}_epochs_${num_procs}_processes.txt
