@@ -34,6 +34,12 @@ EPOCH_FLOP = {
     30000: 1977046869
 }
 
+
+# Grabbed from
+# http://download.intel.com/support/processors/xeon/sb/xeon_5500.pdf
+X5560_FLOPS = 44.8 * (10 ** 9)      # This figure is used because it's smaller
+X5570_FLOPS = 46.928 * (10 ** 9)
+
 # Parameter types
 NEURON = "neuron"
 EPOCH = "epoch"
@@ -60,7 +66,9 @@ VALUE_LABELS = {
 LOMONOSOV_PEAK_PERFORMANCE = 1.7 * (1e15)
 
 
-name_re = re.compile(r"stdout_(?P<num_epochs>\d+)_(epochs|neurons)_(?P<num_procs>\d+)_processes.txt")
+universal_name_re = re.compile(r"stdout_(?P<num_epochs>\d+)_(epochs|neurons)_(?P<num_procs>\d+)_processes.txt")
+neuron_name_re = re.compile(r"stdout_(?P<num_epochs>\d+)_neurons_(?P<num_procs>\d+)_processes.txt")
+epoch_name_re = re.compile(r"stdout_(?P<num_epochs>\d+)_epochs_(?P<num_procs>\d+)_processes.txt")
 
 
 def file_list(path):
@@ -76,13 +84,24 @@ def show_plot(path, parameter, plot_type):
     ax = fig.add_subplot(111, projection='3d')
     ax.set_xlabel(PARAMETER_LABELS[parameter])
     ax.set_ylabel("# of processes")
-    ax.set_xlabel(VALUE_LABELS[plot_type])
-    ax.plot_surface(X, Y, Z, shade=False, rstride=1, cstride=1, cmap=cm.coolwarm)
+    ax.set_zlabel(VALUE_LABELS[plot_type])
+    ax.plot_surface(X, Y, Z, shade=True, rstride=1, cstride=1, cmap=cm.coolwarm)
 
     plt.show()
 
+
 def get_x_y_z(input_paths, parameter, plot_type):
+    """
+    X, Y, Z = e.get_x_y_z(e.file_list("../all_results/neuron_results_step_8"), e.NEURON, e.PERFORMANCE)
+    """
     xy_to_z = {}
+
+    if parameter == NEURON:
+        name_re = neuron_name_re
+    elif parameter == EPOCH:
+        name_re = epoch_name_re
+    else:
+        name_re = universal_name_re
 
     for input_path in input_paths:
         match = re.search(name_re, input_path)
@@ -94,7 +113,11 @@ def get_x_y_z(input_paths, parameter, plot_type):
         num_procs = int(match.groupdict()["num_procs"])
 
         with open(input_path, "r") as process_stdout:
-            execution_time = float(process_stdout.read().strip())
+            try:
+                execution_time = float(process_stdout.read().strip())
+            except:
+                print "Problem with '{0}'".format(input_path)
+                raise
 
         # This is another row to the matrix
         xy_to_z[(num_epochs, num_procs)] = execution_time
@@ -119,7 +142,7 @@ def get_x_y_z(input_paths, parameter, plot_type):
 
     if plot_type == PARALLELIZATION_EFFICIENCY:
         Z = (Z[0] / Z) / Y
-    elif plot_type == PERFORMANCE:
+    if plot_type == PERFORMANCE or plot_type == EFFICIENCY:
         # Divide FLOP by time
         if parameter == NEURON:
             flop = NEURON_FLOP
@@ -130,16 +153,12 @@ def get_x_y_z(input_paths, parameter, plot_type):
             epoch_flops = flop[X[0][epoch_i]]
 
             for proc_i in xrange(proc_dims):
-                print "Divide value for {0} {1}, {2} procs by {3}".format(
-                    X[0][epoch_i],
-                    parameter,
-                    Y[proc_i][0],
-                    epoch_flops
-                )
-                Z[proc_i, epoch_i] /= epoch_flops
-    elif plot_type == EFFICIENCY:
-        # Efficiency is performance divided by peak performance
-        pass
+                # FLOP/s
+                Z[proc_i, epoch_i] = epoch_flops / Z[proc_i, epoch_i]
+
+                if plot_type == EFFICIENCY:
+                    divisor = (X5560_FLOPS * Y[proc_i][0] / 8.0)
+                    Z[proc_i, epoch_i] /= divisor
 
     return X, Y, Z
 
