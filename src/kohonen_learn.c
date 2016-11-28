@@ -224,7 +224,7 @@ void print_help(char *command_name) {
     "    -al - Learning rate lambda parameter\n"
     "    -r0 - Initial radius\n"
     "    -rl - Radius lambda parameter\n"
-    "    -s - PRNG seed\n";
+    "    -p - If present, print # of floating point operations rather than time\n";
 
     printf(help, command_name);
 }
@@ -240,7 +240,7 @@ void print_help(char *command_name) {
  *   -al -- Learning rate lambda parameter
  *   -r0 -- Initial radius
  *   -rl -- Radius lambda parameter
- *   -s -- PRNG seed (optional)
+ *   -p - If present, print # of floating point operations rather than time
  *   ./kohonen_learn -i test_input_data.txt -x 40 -y 40 -m 3 -e 1000 -a0 0.1 -al 100.0 -r0 40.0 -rl 100.0 -o neuron_weights.txt works nice
  */
 int main(int argc, char **argv) {
@@ -274,7 +274,7 @@ int main(int argc, char **argv) {
     double *local_neuron_weights;
     double *neuron_weights = NULL;  // Used only in main process
 
-    int neurons_x = -1, neurons_y = -1, data_dim = -1, seed = -1, num_neurons = 0;
+    int neurons_x = -1, neurons_y = -1, data_dim = -1, print_flops = 0, num_neurons = 0;
 
     double max_epochs = -1.0, initial_learning_rate = -1.0, learning_rate_lambda = -1.0, initial_radius = -1.0, radius_lambda = -1.0;
 
@@ -291,7 +291,7 @@ int main(int argc, char **argv) {
                 &radius_lambda,
                 &input_path,
                 &output_path,
-                &seed);
+                &print_flops);
 
     srandom(rank * time(NULL));
 
@@ -423,10 +423,6 @@ int main(int argc, char **argv) {
 
     end_time = MPI_Wtime();
 
-    // if (rank == MAIN_PROCESS) {
-    //     printf(" %f\n", end_time - start_time);
-    // }
-
     success = MPI_Reduce(
         (void *)(&flop_counter),
         (void *)(&total_flop),
@@ -437,7 +433,11 @@ int main(int argc, char **argv) {
         MPI_COMM_WORLD);
 
     if (rank == MAIN_PROCESS) {
-        printf("%lu\n", total_flop);
+        if (print_flops) {
+            printf("%lu\n", total_flop);
+        } else {
+            printf("%f\n", end_time - start_time);
+        }
     }
 
     MPI_Finalize();

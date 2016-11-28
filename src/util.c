@@ -21,7 +21,7 @@ enum FlagType {
     INITIAL_R,
     LAMBDA_A,
     LAMBDA_R,
-    SEED
+    PRINT_FLOPS
 };
 
 
@@ -77,8 +77,8 @@ int get_flag(char *option) {
         return INITIAL_R;
     } else if (strcmp(option, "-rl") == 0) {
         return LAMBDA_R;
-    } else if (strcmp(option, "-s") == 0) {
-        return SEED;
+    } else if (strcmp(option, "-p") == 0) {
+        return PRINT_FLOPS;
     } else {
         return NONE;
     }
@@ -97,7 +97,7 @@ int parse_args(int argc,
                 double *radius_lambda,
                 char **input_path,
                 char **output_path,
-                int *seed) {
+                int *print_flops) {
 
     char *cmd_part;
 
@@ -108,6 +108,13 @@ int parse_args(int argc,
 
         if (cmd_part[0] == '-') {
             last_flag = get_flag(cmd_part);
+
+            if (last_flag == PRINT_FLOPS) {
+                *print_flops = 1;
+
+                last_flag = NONE;
+            }
+
             continue;
         }
 
@@ -175,12 +182,6 @@ int parse_args(int argc,
             case LAMBDA_A:
                 {
                     success = parse_float(cmd_part, learning_rate_lambda);
-
-                    break;
-                }
-            case SEED:
-                {
-                    success = parse_int(cmd_part, seed);
 
                     break;
                 }

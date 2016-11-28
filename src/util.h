@@ -14,7 +14,7 @@ int parse_args(int argc, char **argv, int *neurons_x, int *neurons_y,
                double *initial_learning_rate,
                double *learning_rate_lambda, double *initial_radius,
                double *radius_lambda, char **input_path, char **output_path,
-               int *seed);
+               int *print_flops);
 
 
 void allocate_matrix(double **vectors, int num_vectors, int dims);
