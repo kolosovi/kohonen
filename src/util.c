@@ -328,6 +328,9 @@ void write_output_data(char *output_path, double *output_vectors, int num_vector
 }
 
 
+/**
+ * Taken from an answer by Ryan Reich (http://stackoverflow.com/a/6852396)
+ */
 long random_at_most(long max) {
   unsigned long
     // max <= RAND_MAX < ULONG_MAX, so this is okay.
