@@ -42,7 +42,7 @@
 
     make kohonen_learn
 
-Если все прошло успешно, в папке `build` будет лежать исполняемый файл `kohonen_learn`, предназначенный для обучения сети.
+Если все прошло успешно, в текущей директории будет лежать исполняемый файл `kohonen_learn`, предназначенный для обучения сети.
 
 ## Запуск на "Ломоносове"
 
@@ -52,7 +52,7 @@
 
 Так как программа линкуется с OpenMPI, то нужно использовать скрипт запуска `ompi`. Для этого нужно подключить OpenMPI командой `module load openmpi/1.8.4-gcc`. Пример команды:
 
-    sbatch -t 15 -n 128 -o stdout_10000_neurons_129_processes.txt -p test ompi -n 128 build/kohonen_learn -i test_data/experiment_data.txt -x 1 -y 10000 -e 10000 -a0 0.1 -al 1000 -r0 10000 -rl 1000 -o neuron_weights_10000_neurons_128_processes.txt
+    sbatch -t 15 -n 128 -o stdout_10000_neurons_129_processes.txt -p test ompi -n 128 kohonen_learn -i test_data/experiment_data.txt -x 1 -y 10000 -e 10000 -a0 0.1 -al 1000 -r0 10000 -rl 1000 -o neuron_weights_10000_neurons_128_processes.txt
 
 Для автоматизации экспериментов был написан скрипт `submit_jobs_by_neurons.sh`. Его можно найти в корне репозитория. Параметры, используемые в скрипте, настраиваются с помощью переменных окружения. Кратко опишем параметры:
 
