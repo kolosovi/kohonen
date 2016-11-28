@@ -84,4 +84,5 @@
 
 и запустить скрипт:
 
+    cd ~/_scratch
     ./submit_jobs_by_neurons.sh
